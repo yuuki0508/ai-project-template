@@ -1,0 +1,50 @@
+---
+description: Nest.js API 実装時の規約（Supabase構成）
+globs: api/**
+alwaysApply: false
+---
+
+# Nest.js API 実装規約
+
+## 置き場所
+
+機能単位のモジュールで切る。層でディレクトリを切らない。
+
+```
+api/src/
+├── partners/
+│   ├── partners.module.ts
+│   ├── partners.controller.ts   … 入出力のみ。ロジックを書かない
+│   ├── partners.service.ts      … 業務ロジックはここ
+│   └── dto/                     … 入力DTO・レスポンス型
+├── prisma/prisma.service.ts
+├── supabase/supabase.service.ts … service_role クライアントの生成はここだけ
+└── common/                      … 例外フィルタ・ガード・共通デコレータ
+```
+
+## 約束
+
+- 入力は必ずDTO + `class-validator` で検証する。`any` を受け取らない
+- Controller は Service を呼ぶだけ。Prisma / Supabase クライアントを直接触らない
+- **`SUPABASE_SERVICE_ROLE_KEY` は `supabase.service.ts` 以外で参照しない**
+- 認証はSupabase Authが発行したJWTをGuardで検証する。ユーザーIDは必ずJWTから取る（リクエストボディのuser_idを信用しない）
+- レスポンスにDBのカラムをそのまま返さない
+- エラーは Nest の例外クラス（`NotFoundException` など）を投げる
+- 金額は整数で扱う。`Decimal` を JSON にそのまま出さない
+
+## スキーマ変更の手順
+
+Prisma からマイグレーションを作らない。SQLが一次情報。
+
+```bash
+make new-migration NAME=create_partners   # supabase/migrations にSQLが生成される
+# SQL を書く（RLS有効化とポリシーも同じファイルに含める）
+make migrate                              # 適用 → prisma db pull → generate
+```
+
+`prisma migrate dev` は使わない（Supabase側の管理と二重になる）。
+
+## テスト
+
+- Service の単体テスト＋主要フローの e2e
+- `docs/10_requirements.md` の業務ルール BR-xx には必ずテストを1本書く

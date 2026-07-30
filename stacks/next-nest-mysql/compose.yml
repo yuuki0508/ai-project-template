@@ -1,0 +1,67 @@
+name: __PROJECT_SLUG__
+
+x-node: &node
+  image: __NODE_IMAGE__
+  environment:
+    - TZ=Asia/Tokyo
+  tty: true
+
+services:
+  web:
+    <<: *node
+    working_dir: /app/web
+    command: sh -c "npm install && npm run dev -- -p 3000"
+    ports:
+      - "__PORT_WEB__:3000"
+    volumes:
+      - ./web:/app/web
+    environment:
+      - TZ=Asia/Tokyo
+      - NEXT_PUBLIC_API_URL=http://localhost:__PORT_API__
+      - INTERNAL_API_URL=http://api:4000
+    depends_on:
+      - api
+
+  api:
+    <<: *node
+    working_dir: /app/api
+    command: sh -c "npm install && npx prisma generate && npm run start:dev"
+    ports:
+      - "__PORT_API__:4000"
+    volumes:
+      - ./api:/app/api
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Tokyo
+      - PORT=4000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "__PORT_DB__:3306"
+    environment:
+      MYSQL_DATABASE: __DB_NAME__
+      MYSQL_USER: __DB_NAME__
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      TZ: Asia/Tokyo
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mail:
+    image: axllent/mailpit:latest
+    ports:
+      - "__PORT_MAIL__:8025"
+
+volumes:
+  db-data:

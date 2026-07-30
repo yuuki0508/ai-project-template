@@ -1,0 +1,41 @@
+name: __PROJECT_SLUG__
+
+# DB / 認証 / ストレージは Supabase CLI が別のコンテナ群として起動する。
+# ここでは web と api だけを面倒みる。
+x-node: &node
+  image: __NODE_IMAGE__
+  environment:
+    - TZ=Asia/Tokyo
+  tty: true
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  web:
+    <<: *node
+    working_dir: /app/web
+    command: sh -c "npm install && npm run dev -- -p 3000"
+    ports:
+      - "__PORT_WEB__:3000"
+    volumes:
+      - ./web:/app/web
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Tokyo
+      - NEXT_PUBLIC_API_URL=http://localhost:__PORT_API__
+      - INTERNAL_API_URL=http://api:4000
+
+  api:
+    <<: *node
+    working_dir: /app/api
+    command: sh -c "npm install && npx prisma generate && npm run start:dev"
+    ports:
+      - "__PORT_API__:4000"
+    volumes:
+      - ./api:/app/api
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Tokyo
+      - PORT=4000

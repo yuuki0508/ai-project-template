@@ -1,0 +1,34 @@
+---
+description: この案件の全体像と情報の在り処。常に読み込まれる。
+alwaysApply: true
+---
+
+# __PROJECT_TITLE__（`__PROJECT_SLUG__`）
+
+__ONELINER__
+
+- スタック: __STACK_LABEL__
+- 詳細な背景・スコープは `docs/00_overview.md`
+
+## 情報の在り処（迷ったらここを見る）
+
+| 知りたいこと | 見る場所 |
+|---|---|
+| 何のためのシステムか・スコープ外 | `docs/00_overview.md` |
+| 機能要件 | `docs/10_requirements.md` |
+| テーブルの意味・関連・設計意図 | `docs/20_data_model.md` |
+| カラム定義そのもの | マイグレーション（**一次情報**） |
+| 画面ごとの仕様 | `docs/30_screens/S-xx-*.md` |
+| APIの入出力 | `docs/40_api.md` |
+| 日本語の業務用語 ↔ コード上の識別子 | `docs/glossary.md` |
+| 過去にどう決めたか・なぜそうしたか | `docs/decisions/` |
+| 起動・デプロイ・障害対応 | `docs/ops/runbook.md` |
+| 今やっている作業の範囲 | `tasks/active/` |
+
+__STACK_BLOCK__
+
+## この案件固有の制約
+
+<!-- 案件開始時に記入。例: 顧客の既存DBを変更できない / IE11対応が必要 / 保守は自分1人 -->
+
+- （未記入）

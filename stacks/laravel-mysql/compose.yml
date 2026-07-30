@@ -1,0 +1,49 @@
+name: __PROJECT_SLUG__
+
+services:
+  app:
+    build: ./docker/php
+    volumes:
+      - .:/var/www/html
+    environment:
+      - TZ=Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "__PORT_WEB__:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "__PORT_DB__:3306"
+    environment:
+      MYSQL_DATABASE: __DB_NAME__
+      MYSQL_USER: __DB_NAME__
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      TZ: Asia/Tokyo
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mail:
+    image: axllent/mailpit:latest
+    ports:
+      - "__PORT_MAIL__:8025"
+
+volumes:
+  db-data:

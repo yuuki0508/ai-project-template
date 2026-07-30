@@ -1,0 +1,48 @@
+---
+description: Laravel実装時の規約
+globs: app/**,routes/**,database/**,tests/**,resources/**,config/**
+alwaysApply: false
+---
+
+# Laravel 実装規約
+
+## 置き場所
+
+| 種類 | 場所 |
+|---|---|
+| コントローラ（薄く保つ） | `app/Http/Controllers/` |
+| ビジネスロジック | `app/Services/` |
+| バリデーション | `app/Http/Requests/` |
+| 参照系の複雑なクエリ | `app/Queries/` |
+| モデル | `app/Models/` |
+| 画面 | `resources/views/` |
+
+コントローラの1メソッドは「入力を受ける → Serviceを呼ぶ → 結果を返す」の3行程度に収める。
+
+## DB
+
+- マイグレーションは常に新規追加。適用済みファイルを編集しない
+- 外部キー制約を必ず張る。`ON DELETE` の挙動を明示する
+- 金額は `unsignedBigInteger`（円単位の整数）。`decimal` や `float` を金額に使わない
+- 日時は `timestamp`。アプリ側 `APP_TIMEZONE=Asia/Tokyo`
+- 論理削除は `SoftDeletes` を使う。物理削除する場合は理由をコメントに書く
+- N+1 を作らない。一覧取得では必ず `with()` を使う
+
+## 実装時の注意
+
+- 生SQLを書く場合はバインドパラメータを使う（文字列連結は禁止）
+- 一括更新・削除を伴う処理は必ずトランザクションで囲む
+- `dd()` `dump()` `var_dump()` をコミットに残さない
+- 認可は Policy に集約する。コントローラ内で `if ($user->role === ...)` と書かない
+- 例外メッセージに顧客データやSQLを含めない
+
+## テスト
+
+- Feature テストで「HTTPリクエスト → DBの状態」を検証する。単体テストは業務計算ロジックに絞る
+- 業務ルール（`docs/10_requirements.md` の BR-xx）は必ずテストを1本書く
+- テストDBは `:memory:` ではなくMySQLを使う（本番と挙動を揃える）
+
+## コマンド
+
+`php artisan` はホストで直接実行できない。`make sh` でコンテナに入るか、
+`docker compose exec app php artisan ...` を使う。

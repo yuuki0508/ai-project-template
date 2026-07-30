@@ -1,0 +1,50 @@
+---
+description: Supabaseのスキーマ・RLS・認証に関する規約
+globs: supabase/**
+alwaysApply: false
+---
+
+# Supabase 規約
+
+## マイグレーション
+
+- `supabase/migrations/` のSQLが**スキーマの一次情報**。適用済みファイルは編集しない
+- 新規作成は `make new-migration NAME=xxx`
+- 1マイグレーション = 1つの意味のある変更
+- テーブル作成のマイグレーションには、必ず次をセットで含める
+  1. `create table`
+  2. `alter table ... enable row level security;`
+  3. ポリシー定義
+  4. `updated_at` の自動更新トリガ（必要な場合）
+
+## RLS
+
+- **全テーブルでRLSを有効にする。** 例外を作る場合は ADR に理由を書く
+- ポリシーは「誰が」「どの操作を」「どの行に」できるかを明示する
+- `service_role` はRLSを無視する。API側で権限判定を必ず行う
+
+```sql
+alter table partners enable row level security;
+
+create policy "認証済みユーザーは自社のデータのみ参照できる"
+  on partners for select
+  to authenticated
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+```
+
+## 型
+
+- カラムの命名はスネークケース。日本語の業務用語との対応は `docs/glossary.md` に従う
+- 金額は `bigint`（最小単位の整数）。`float` / `real` を金額に使わない
+- 日時は `timestamptz`。`timestamp`（タイムゾーンなし）は使わない
+- 主キーは `uuid default gen_random_uuid()`
+
+## 認証
+
+- ユーザー情報は `auth.users` を直接更新せず、プロフィール用テーブルを別に作って参照する
+- ロールや所属は JWT のカスタムクレームに載せる（ポリシーから参照するため）
+
+## ローカルとリモート
+
+- ローカルで検証 → `supabase db push` で本番へ。Studioから本番スキーマを手で変更しない
+- 手で変えてしまった場合は `supabase db pull` で差分をマイグレーションに取り込む
