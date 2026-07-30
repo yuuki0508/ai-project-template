@@ -1,0 +1,14 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # 5 から始める。案件が安定したら 6 → 7 と上げていく。
+    # 上げた結果を必ず docs/decisions/ に残すこと（後から下げたくなる判断が出るため）
+    level: 5
+
+    # 生成物や自動生成コードを除外したくなったらここに書く
+    # excludePaths:
+    #     - app/Legacy/*

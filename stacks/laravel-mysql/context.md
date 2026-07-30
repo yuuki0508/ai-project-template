@@ -1,16 +1,17 @@
 ## スタック構成（Laravel + MySQL）
 
-ローカル: アプリ http://localhost:__PORT_WEB__ / メール確認 http://localhost:__PORT_MAIL__ / MySQL localhost:__PORT_DB__
+ローカル: アプリ http://localhost:__PORT_WEB__ / phpMyAdmin http://localhost:__PORT_PMA__ / メール確認 http://localhost:__PORT_MAIL__ / MySQL localhost:__PORT_DB__
 
 | 層 | 技術 | ディレクトリ |
 |---|---|---|
 | アプリ | Laravel（PHP __PHP_LABEL__ / php-fpm） | `app/` `routes/` `resources/` |
 | DB | MySQL 8.0 | `database/migrations/` |
 | Web | Nginx | `docker/nginx/` |
+| DB管理 | phpMyAdmin（root でログイン） | — |
 | メール | Mailpit（送信は全部ここで止まる） | — |
 | ビルド | Node __NODE_LABEL__（Vite。PHPコンテナに同梱） | `vite.config.js` |
 
-- DB名 `__DB_NAME__` / ユーザー `__DB_NAME__` / パスワードは `.env.example` 参照
+- DB名 `__DB_NAME__` / 接続情報は `.env` が唯一の置き場。`compose.yml` は参照のみ
 - コマンドはホストから `make` 経由で実行する。`php artisan` を直接叩かない（コンテナ内で動かす必要がある）
 - 検証: `make check` = Pint（整形チェック）+ Larastan（静的解析）+ PHPUnit
 - PHP / Node のバージョンは `docker/php/Dockerfile` の `FROM` 行で管理。変更したら `make rebuild`
@@ -21,3 +22,4 @@
 - クエリはEloquentを基本とし、複雑な集計のみ生SQL。生SQLを書く場合は必ずバインドパラメータを使う
 - バリデーションは FormRequest に書く
 - 画面はBladeで作る（別途SPA構成が必要なら先に相談する）
+- **phpMyAdmin からスキーマを変更しない。** 参照とデータ確認のみに使う。テーブル定義の変更はマイグレーションで行う

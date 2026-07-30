@@ -1,4 +1,6 @@
-DC  := docker compose
+# コンテナをホストと同じUID/GIDで動かす。
+# rootで npm install するとWSL2上のファイルがroot所有になり、エディタから保存できなくなる。
+DC  := HOST_UID=$(shell id -u) HOST_GID=$(shell id -g) docker compose
 WEB := $(DC) exec web
 API := $(DC) exec api
 
@@ -10,6 +12,8 @@ help: ## コマンド一覧
 
 init: ## 初回のみ: web / api の雛形を生成
 	@test -f .env || cp .env.example .env
+	@# バインドマウント先をホスト側で先に作る。Dockerに作らせるとroot所有になる
+	@mkdir -p web api
 	@if [ ! -f web/package.json ]; then \
 	  $(DC) run --rm --no-deps -w /app web sh -lc \
 	    'npx -y create-next-app@latest web --ts --tailwind --eslint --app --no-src-dir --use-npm --yes'; \
@@ -20,12 +24,19 @@ init: ## 初回のみ: web / api の雛形を生成
 	     && cd api && npm i @prisma/client && npm i -D prisma \
 	     && npx prisma init --datasource-provider mysql'; \
 	fi
+	@# prisma init が作るダミーの api/.env は使わない（接続情報は compose.yml 経由）
+	@rm -f api/.env
 	$(DC) up -d
 	@echo ""
-	@echo "  web http://localhost:__PORT_WEB__   api http://localhost:__PORT_API__"
+	@echo "  web         http://localhost:__PORT_WEB__"
+	@echo "  api         http://localhost:__PORT_API__"
+	@echo "  phpMyAdmin  http://localhost:__PORT_PMA__  (root / .env の DB_ROOT_PASSWORD)"
+	@echo "  メール確認  http://localhost:__PORT_MAIL__"
 	@echo "  次に api/prisma/schema.prisma を書いて make migrate"
 
 up: ## 起動
+	@test -f .env || cp .env.example .env
+	@mkdir -p web api
 	$(DC) up -d
 
 down: ## 停止

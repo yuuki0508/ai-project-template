@@ -133,9 +133,10 @@ PORT_WEB=3000
 PORT_API=4000
 PORT_DB=3306
 PORT_MAIL=8025
+PORT_PMA=8080
 SB_API=54321; SB_STUDIO=54323; SB_INBUCKET=54324
 case "$STACK" in
-  laravel-mysql)      PORT_WEB=8080 ;;
+  laravel-mysql)      PORT_WEB=8000 ;;
   next-nest-supabase) PORT_DB=54322; PORT_MAIL=$SB_INBUCKET ;;
 esac
 
@@ -148,10 +149,14 @@ RUNTIME_SUMMARY="Node $NODE_LABEL"
 GH_SUMMARY="作成しない"
 [ "$GH_CREATE" -eq 1 ] && GH_SUMMARY="$GH_REPO を作成（$GH_VIS）"
 
-PORT_SUMMARY="web=$PORT_WEB / api=$PORT_API / db=$PORT_DB / mail=$PORT_MAIL"
-if [ "$STACK" = "laravel-mysql" ]; then
-  PORT_SUMMARY="web=$PORT_WEB / db=$PORT_DB / mail=$PORT_MAIL"
-fi
+case "$STACK" in
+  laravel-mysql)
+    PORT_SUMMARY="web=$PORT_WEB / db=$PORT_DB / phpMyAdmin=$PORT_PMA / mail=$PORT_MAIL" ;;
+  next-nest-mysql)
+    PORT_SUMMARY="web=$PORT_WEB / api=$PORT_API / db=$PORT_DB / phpMyAdmin=$PORT_PMA / mail=$PORT_MAIL" ;;
+  *)
+    PORT_SUMMARY="web=$PORT_WEB / api=$PORT_API / db=$PORT_DB / mail=$PORT_MAIL" ;;
+esac
 
 TARGET="${OUT:-$SELF_DIR}"
 MODE="in-place"; [ -n "$OUT" ] && MODE="out-of-place"
@@ -210,6 +215,7 @@ while IFS= read -r f; do
       -e "s/__PORT_API__/$PORT_API/g" \
       -e "s/__PORT_DB__/$PORT_DB/g" \
       -e "s/__PORT_MAIL__/$PORT_MAIL/g" \
+      -e "s/__PORT_PMA__/$PORT_PMA/g" \
       -e "s/__DATE__/$TODAY/g" \
       -e "s/__PHP_IMAGE__/$PHP_IMAGE/g" \
       -e "s/__PHP_LABEL__/$PHP_LABEL/g" \
@@ -246,7 +252,6 @@ if [ "$MODE" = "in-place" ] && [ -d .git ]; then
 elif [ ! -d .git ]; then
   git init -q
 fi
-git branch -M main >/dev/null 2>&1 || true
 git add -A >/dev/null 2>&1 || true
 MSG="chore: $SLUG 初期構成（$STACK_LABEL）"
 if git config user.email >/dev/null 2>&1; then
@@ -254,6 +259,8 @@ if git config user.email >/dev/null 2>&1; then
 else
   git -c user.name=scaffold -c user.email=scaffold@local commit -qm "$MSG" >/dev/null 2>&1 || true
 fi
+# ブランチ名の正規化は、コミットが1つ出来てからでないと失敗する
+git branch -M main >/dev/null 2>&1 || true
 
 # ---------- GitHubリポジトリ作成 ----------
 GH_DONE=0

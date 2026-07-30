@@ -5,6 +5,8 @@ build/
 coverage/
 .env
 .env.local
+# prisma init が作るダミー。接続情報は compose.yml 経由で渡すので使わない
+api/.env
 *.log
 .DS_Store
 Thumbs.db

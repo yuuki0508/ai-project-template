@@ -1,4 +1,6 @@
-DC  := docker compose
+# コンテナをホストと同じUID/GIDで動かす。
+# rootで npm install するとWSL2上のファイルがroot所有になり、エディタから保存できなくなる。
+DC  := HOST_UID=$(shell id -u) HOST_GID=$(shell id -g) docker compose
 WEB := $(DC) exec web
 API := $(DC) exec api
 SB  := npx -y supabase@latest
@@ -11,6 +13,8 @@ help: ## コマンド一覧
 
 init: ## 初回のみ: Supabase初期化 + web / api の雛形を生成
 	@test -f .env || cp .env.example .env
+	@# バインドマウント先をホスト側で先に作る。Dockerに作らせるとroot所有になる
+	@mkdir -p web api
 	@test -d supabase || $(SB) init
 	$(SB) start
 	@if [ ! -f web/package.json ]; then \
@@ -24,6 +28,7 @@ init: ## 初回のみ: Supabase初期化 + web / api の雛形を生成
 	     && cd api && npm i @prisma/client @supabase/supabase-js && npm i -D prisma \
 	     && npx prisma init --datasource-provider postgresql'; \
 	fi
+	@rm -f api/.env
 	$(DC) up -d
 	@echo ""
 	@echo "  ★ 上に表示された anon key / service_role key を .env に貼ってください"
@@ -31,6 +36,8 @@ init: ## 初回のみ: Supabase初期化 + web / api の雛形を生成
 	@echo "  Studio http://localhost:__SB_STUDIO__       メール http://localhost:__SB_INBUCKET__"
 
 up: ## 起動（Supabase + web/api）
+	@test -f .env || cp .env.example .env
+	@mkdir -p web api
 	$(SB) start
 	$(DC) up -d
 

@@ -9,9 +9,13 @@ make migrate  # マイグレーション
 make seed     # 初期データ
 ```
 
-- web: http://localhost:__PORT_WEB__
+- アプリ: http://localhost:__PORT_WEB__
 - api: http://localhost:__PORT_API__
+- phpMyAdmin: http://localhost:__PORT_PMA__ （MySQL構成のみ。ユーザー `root` / パスワードは `.env` の `DB_ROOT_PASSWORD`）
 - メール確認: http://localhost:__PORT_MAIL__
+
+**phpMyAdmin からスキーマを変更しないこと。** データの確認と調査に使う。
+テーブル定義の一次情報はマイグレーションであり、GUIで直接変更すると実装と履歴が食い違う。
 
 ## 日常のコマンド
 
@@ -45,11 +49,25 @@ make check
 
 ## 環境変数
 
-`.env.example` が一次情報。新しい変数を追加したら必ず `.env.example` にも追記する。
+`.env` が唯一の置き場で、`.env.example` がその雛形（＝一次情報）。
+`compose.yml` は値を直接持たず `${VAR}` で参照するだけにしてある。
+**パスワードやキーを `compose.yml` や Makefile に書かないこと。**
+
+新しい変数を追加したら必ず `.env.example` にも追記する。追記を忘れると、
+別マシンでの `make init` が「変数がありません」で止まる。
+
+`.env.example` にはローカル専用の既定値だけを置く。本番の値は書かず、
+デプロイ先の環境変数に設定する。
 
 | 変数 | 用途 | 取得元 |
 |---|---|---|
 |  |  |  |
+
+### 起動時に「.env に XXX がありません」と出る
+
+`compose.yml` は `${VAR:?...}` 記法で必須変数を宣言している。
+`.env` に該当行を足せば起動する（`.env.example` を参照）。
+空文字で通してパスワード無しのDBが出来上がるのを防ぐための、意図的な失敗。
 
 ## デプロイ
 
@@ -65,6 +83,21 @@ make check
 - 復元手順:
 
 ## 障害対応
+
+### ファイルが root 所有になって編集できない（WSL2 / Linux）
+
+コンテナはホストと同じUID/GIDで動かしているので通常は起きない。
+過去に root で起動した痕跡がある場合は次で戻す。
+
+```bash
+sudo chown -R $USER:$USER .
+```
+
+Laravel構成で画面が500になる場合は、php-fpm が `storage/` に書けていない。
+
+```bash
+make perms
+```
 
 ### DBに接続できない
 

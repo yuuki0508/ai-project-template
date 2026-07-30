@@ -1,12 +1,16 @@
 name: __PROJECT_SLUG__
 
+# 認証情報はすべて .env を唯一の置き場とし、ここでは参照だけする。
+# ${VAR:?...} は未設定なら起動させずエラーにする記法。
+# ${VAR} だと空文字で通り、パスワード無しのMySQLが出来上がるため使わない。
+
 services:
   app:
     build: ./docker/php
     volumes:
       - .:/var/www/html
     environment:
-      - TZ=Asia/Tokyo
+      TZ: Asia/Tokyo
     depends_on:
       db:
         condition: service_healthy
@@ -26,19 +30,33 @@ services:
     ports:
       - "__PORT_DB__:3306"
     environment:
-      MYSQL_DATABASE: __DB_NAME__
-      MYSQL_USER: __DB_NAME__
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: "${DB_DATABASE:?.env に DB_DATABASE がありません}"
+      MYSQL_USER: "${DB_USERNAME:?.env に DB_USERNAME がありません}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?.env に DB_PASSWORD がありません}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?.env に DB_ROOT_PASSWORD がありません}"
       TZ: Asia/Tokyo
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      # パスワードはコンテナ内の環境変数から読む（$$ でコンテナ側のシェルに渡す）
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "__PORT_PMA__:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?.env に DB_ROOT_PASSWORD がありません}"
+      UPLOAD_LIMIT: 256M
+      TZ: Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
 
   mail:
     image: axllent/mailpit:latest

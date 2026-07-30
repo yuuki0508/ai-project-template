@@ -2,10 +2,11 @@ name: __PROJECT_SLUG__
 
 # DB / 認証 / ストレージは Supabase CLI が別のコンテナ群として起動する。
 # ここでは web と api だけを面倒みる。
+# user: はWSL2対策。rootで npm install するとホスト側のファイルが
+# root所有になり、エディタから保存できなくなる。
 x-node: &node
   image: __NODE_IMAGE__
-  environment:
-    - TZ=Asia/Tokyo
+  user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
   tty: true
   extra_hosts:
     - "host.docker.internal:host-gateway"
@@ -22,9 +23,10 @@ services:
     env_file:
       - .env
     environment:
-      - TZ=Asia/Tokyo
-      - NEXT_PUBLIC_API_URL=http://localhost:__PORT_API__
-      - INTERNAL_API_URL=http://api:4000
+      TZ: Asia/Tokyo
+      HOME: /tmp
+      NEXT_PUBLIC_API_URL: http://localhost:__PORT_API__
+      INTERNAL_API_URL: http://api:4000
 
   api:
     <<: *node
@@ -37,5 +39,6 @@ services:
     env_file:
       - .env
     environment:
-      - TZ=Asia/Tokyo
-      - PORT=4000
+      TZ: Asia/Tokyo
+      HOME: /tmp
+      PORT: 4000

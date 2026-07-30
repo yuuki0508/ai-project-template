@@ -1,0 +1,14 @@
+# Windows 側で clone しても改行コードが壊れないようにする。
+# init.sh や Makefile が CRLF になると起動できなくなるため必須。
+* text=auto eol=lf
+
+*.sh      text eol=lf
+Makefile  text eol=lf
+*.mdc     text eol=lf
+*.cmd     text eol=crlf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
+*.zip binary

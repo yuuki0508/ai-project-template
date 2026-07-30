@@ -1,6 +1,6 @@
 ## スタック構成（Next.js + Nest.js + MySQL）
 
-ローカル: web http://localhost:__PORT_WEB__ / api http://localhost:__PORT_API__ / メール確認 http://localhost:__PORT_MAIL__ / MySQL localhost:__PORT_DB__
+ローカル: web http://localhost:__PORT_WEB__ / api http://localhost:__PORT_API__ / phpMyAdmin http://localhost:__PORT_PMA__ / メール確認 http://localhost:__PORT_MAIL__ / MySQL localhost:__PORT_DB__
 
 | 層 | 技術 | ディレクトリ |
 |---|---|---|
@@ -8,10 +8,11 @@
 | API | Nest.js（TypeScript） | `api/` |
 | ORM | Prisma | `api/prisma/schema.prisma` |
 | DB | MySQL 8.0 | `api/prisma/migrations/` |
+| DB管理 | phpMyAdmin（root でログイン） | — |
 | メール | Mailpit（送信は全部ここで止まる） | — |
 
 - web → api はサーバー側から `http://api:__PORT_API__`、ブラウザからは `http://localhost:__PORT_API__`
-- DB名 `__DB_NAME__`
+- DB名 `__DB_NAME__` / 接続情報は `.env` が唯一の置き場。`DATABASE_URL` は `compose.yml` が組み立てる
 - 検証: `make check` = ESLint + `tsc --noEmit` + Jest（web / api 両方）
 - Node のバージョンは `compose.yml` の `x-node` の `image` で管理。変更したら `make rebuild`
 
@@ -21,3 +22,4 @@
 - フロントに業務ロジックを置かない。計算・判定はAPI側で行い、フロントは表示に専念する
 - Prisma のスキーマ変更は必ずマイグレーションを生成する（`make migrate`）。`db push` は使わない
 - Server Component をデフォルトとし、`"use client"` は必要な葉のコンポーネントだけに付ける
+- **phpMyAdmin からスキーマを変更しない。** 参照とデータ確認のみに使う。変更は Prisma のマイグレーションで行う
