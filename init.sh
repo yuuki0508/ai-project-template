@@ -291,7 +291,8 @@ fi
 cat <<'NEXT'
 
 次の手順
-  1. docs/00_overview.md と docs/glossary.md を埋める（AIの精度がここで決まる）
+  1. README.md の「埋める必要があるファイル」を見て空欄を埋める
+     最低限 docs/00_overview.md の「やらないこと」と docs/glossary.md（AIの精度がここで決まる）
   2. make init    ... フレームワークの雛形を作成（初回のみ）
   3. make up      ... 起動
   4. make check   ... lint / 型 / テストが通ることを確認
