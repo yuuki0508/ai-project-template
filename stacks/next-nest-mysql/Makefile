@@ -86,3 +86,5 @@ seed: ## 初期データ投入
 
 studio: ## Prisma Studio
 	$(API) npx prisma studio
+
+include Makefile.handoff.mk

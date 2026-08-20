@@ -73,3 +73,5 @@ seed: ## 初期データ投入
 
 tinker: ## 対話シェル
 	$(APP) php artisan tinker
+
+include Makefile.handoff.mk

@@ -153,6 +153,15 @@ make check
 
 ## 育て方
 
-案件で「AIに同じ説明を2回した」ら、それは `common/.cursor/rules/10-conventions.mdc` か
-スタックの規約ファイルに書くべき内容。案件側で直したら、テンプレートにも戻すこと。
+案件側で `make done` するたび、AIが観測した「リポジトリに書かれていなかった情報」が
+`docs/decisions/_inbox.md` に溜まり、横断inbox（既定 `~/ai-knowledge/_inbox.md`）へ集約される。
+
+`make promote` を叩くと昇格候補が出る。
+
+| 条件 | 昇格先 |
+|---|---|
+| 同一 keyword が同一案件で2回以上 | 案件の `docs/decisions/NNNN-*.md` |
+| 同一 keyword が**2案件以上**で出現 | `common/.cursor/rules/10-conventions.mdc`<br>スタック固有なら `stacks/<id>/.cursor/rules/` |
+
+**テンプレートに戻すまでが1セット。** 案件側だけ直すと次の案件で同じ説明を繰り返すことになる。
 テンプレートが育つほど、次の案件の立ち上がりが速くなる。

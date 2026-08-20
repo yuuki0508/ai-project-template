@@ -1,0 +1,56 @@
+# =============================================================
+# handoff / decisions inbox
+#   既存の Makefile から include して使う:
+#     include Makefile.handoff.mk
+# =============================================================
+
+PROJECT      ?= __PROJECT_SLUG__
+INBOX        ?= docs/decisions/_inbox.md
+GLOBAL_INBOX ?= $(HOME)/ai-knowledge/_inbox.md
+TODAY        := $(shell date +%F)
+
+.PHONY: handoff done promote inbox-sync
+
+## handoff: 引き継ぎ観測プロンプトをクリップボードへ（作業終了時に叩く）
+handoff:
+	@if command -v pbcopy >/dev/null 2>&1; then \
+		cat .ai/prompts/handoff.md | pbcopy; echo "→ クリップボードにコピーしました。AIに貼り付けてください。"; \
+	elif command -v xclip >/dev/null 2>&1; then \
+		cat .ai/prompts/handoff.md | xclip -selection clipboard; echo "→ クリップボードにコピーしました。AIに貼り付けてください。"; \
+	elif command -v clip.exe >/dev/null 2>&1; then \
+		cat .ai/prompts/handoff.md | clip.exe; echo "→ クリップボードにコピーしました。AIに貼り付けてください。"; \
+	else \
+		cat .ai/prompts/handoff.md; \
+	fi
+
+## done: タスクを完了させる。handoff が済んでいないと通さない
+##   usage: make done TASK=<タスク名>  /  抜け道: make done TASK=x FORCE=1
+done:
+	@test -n "$(TASK)" || { echo "usage: make done TASK=<タスク名>"; exit 1; }
+	@test -f tasks/active/$(TASK).md || { echo "tasks/active/$(TASK).md がありません"; exit 1; }
+	@if [ -z "$(FORCE)" ] && ! grep -q "^- $(TODAY) | $(PROJECT) |" $(INBOX); then \
+		echo ""; \
+		echo "  今日の観測ログが $(INBOX) にありません。"; \
+		echo "  先に  make handoff  を実行し、AIに貼り付けてください。"; \
+		echo "  本当に何も無かった場合は  make done TASK=$(TASK) FORCE=1"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p tasks/done
+	@mv tasks/active/$(TASK).md tasks/done/$(TODAY)-$(TASK).md
+	@$(MAKE) --no-print-directory inbox-sync
+	@echo "→ tasks/done/$(TODAY)-$(TASK).md"
+	@$(MAKE) --no-print-directory promote
+
+## inbox-sync: 案件内 inbox を横断 inbox へ集約（重複行はスキップ）
+inbox-sync:
+	@mkdir -p $(dir $(GLOBAL_INBOX))
+	@touch $(GLOBAL_INBOX)
+	@grep -E '^- [0-9]{4}-[0-9]{2}-[0-9]{2} \|' $(INBOX) 2>/dev/null | \
+		while IFS= read -r l; do \
+			grep -qxF -e "$$l" $(GLOBAL_INBOX) || echo "$$l" >> $(GLOBAL_INBOX); \
+		done; true
+
+## promote: 昇格候補を判定する（人間が数えない）
+promote:
+	@AI_INBOX=$(GLOBAL_INBOX) bash bin/promote-check.sh

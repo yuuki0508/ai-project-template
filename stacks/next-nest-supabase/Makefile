@@ -99,3 +99,4 @@ status: ## Supabaseの起動状態とキーを表示
 studio: ## Supabase Studio を開く
 	@echo "http://localhost:__SB_STUDIO__"
 
+include Makefile.handoff.mk
