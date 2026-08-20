@@ -14,3 +14,4 @@
 そのあと、ホスト側で make handoff → make done TASK=<名> を実行すること。
 ADR（docs/decisions/NNNN-*.md）は make promote が昇格候補を出してから書く。
 このタイミングでは書かない。
+```
