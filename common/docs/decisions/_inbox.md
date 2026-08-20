@@ -24,7 +24,8 @@
 | 同一 keyword が同一案件で2回以上 | `docs/decisions/NNNN-*.md`（案件固有の決定） |
 | 同一 keyword が**2案件以上**で出現 | テンプレートの `common/.cursor/rules/10-conventions.mdc`<br>（スタック固有なら `stacks/<id>/.cursor/rules/`） |
 
-昇格したら、その keyword の行はここから削除し、昇格先へのパスを下の「昇格済み」に残す。
+昇格したら `make promoted KW=<keyword> NOTE=<昇格先>` を実行する。
+以後その keyword は `make promote` の候補から除外される（行は消さなくてよい）。
 **テンプレート側に戻すまでが1セット**。案件側だけ直すと次の案件で再発する。
 
 ## keyword 一覧

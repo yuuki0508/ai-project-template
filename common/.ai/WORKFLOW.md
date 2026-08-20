@@ -438,10 +438,19 @@ make promote
 | 2 | 案件内候補 → `docs/decisions/NNNN-*.md` に ADR を書く |
 | 3 | 横断候補 → **テンプレートの** `common/.cursor/rules/10-conventions.mdc` に書く |
 | 4 | テンプレートを commit / push する |
-| 5 | 昇格させた行の先頭を `- ` から `x ` に変える（集計から外れる） |
+| 5 | `make promoted KW=<keyword> NOTE=<昇格先>` で昇格済みに記録する |
 | 6 | 表記ゆれを統合する |
 
 **4番までやって1セット。** 案件側だけ直すと次の案件で同じ説明を繰り返すことになる。
+
+5番を忘れると、その keyword は翌月以降も候補に出続ける。
+`make promoted` は現在の件数を一緒に記録するので、**昇格後に再発した場合だけ
+「ルールが効いていない」として再浮上する。**
+
+```bash
+make promoted KW=soft-delete NOTE="shift-kanri/decisions/0002"
+→ 昇格済みに記録しました: soft-delete （現在 2 件）
+```
 
 **6番が仕組みの生命線。** `naming-convention` と `naming-rule` のような
 重複keywordを手で1つにまとめる。放置すると重複が検出されなくなり、
@@ -489,6 +498,7 @@ make promote
 | `make done TASK=<名前>` | タスク完了 | **タスク完了時** | あなた |
 | `make inbox-sync` | 横断inboxへ集約 | `done` が自動で呼ぶ | 自動 |
 | `make promote` | 昇格候補の判定 | 月1回 | あなた |
+| `make promoted KW=<keyword>` | 昇格済みとして記録 | 昇格したとき | あなた |
 
 **あなたが日常的に叩くのは `up` `down` `handoff` `done` の4つだけ。**
 
@@ -633,7 +643,12 @@ GitHub への push は契約を確認してから。ローカルの `git init` �
 「全 keyword」欄に似た名前が並んでいたら統合する。
 
 **昇格済みの keyword が候補に出続ける**
-→ 横断inboxの該当行の先頭を `- ` から `x ` に変える。集計から外れる。
+→ `make promoted KW=<keyword>` を実行し忘れている。実行すれば以後は除外される。
+
+**「昇格後も再発している」に出た**
+→ ルールを書いたのにAIが同じ質問を繰り返している。`10-conventions.mdc` の
+書き方が曖昧か、`globs` の条件から外れて読まれていない可能性がある。
+書いた場所と表現を見直す。
 
 **AIが「触ってはいけない領域」を触った**
 → タスクファイルの「触ってよいファイル」に余計なものが入っていないか確認する。

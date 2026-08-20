@@ -7,9 +7,10 @@
 PROJECT      ?= __PROJECT_SLUG__
 INBOX        ?= docs/decisions/_inbox.md
 GLOBAL_INBOX ?= $(HOME)/ai-knowledge/_inbox.md
+PROMOTED     ?= $(dir $(GLOBAL_INBOX))_promoted.md
 TODAY        := $(shell date +%F)
 
-.PHONY: handoff done promote inbox-sync
+.PHONY: handoff done promote promoted inbox-sync
 
 handoff: ## 作業終了時: 引き継ぎ観測プロンプトをクリップボードへ
 	@if command -v pbcopy >/dev/null 2>&1; then \
@@ -50,3 +51,16 @@ inbox-sync: ## 案件内 inbox を横断 inbox へ集約（重複行はスキッ
 
 promote: ## 昇格候補を判定する（人間が数えない）
 	@AI_INBOX=$(GLOBAL_INBOX) bash bin/promote-check.sh
+
+# usage: make promoted KW=<keyword> [NOTE=<昇格先メモ>]
+promoted: ## 昇格済みとして記録し、以後の候補から除外する
+	@test -n "$(KW)" || { echo "usage: make promoted KW=<keyword> [NOTE=<昇格先>]"; exit 1; }
+	@test -f $(GLOBAL_INBOX) || { echo "横断inboxがありません: $(GLOBAL_INBOX)"; exit 1; }
+	@touch $(PROMOTED)
+	@if grep -qE '^[[:space:]]*$(KW)[[:space:]]*\|' $(PROMOTED); then \
+		echo "既に登録済みです: $(KW)"; exit 1; \
+	fi
+	@c=`awk -F'[[:space:]]*[|][[:space:]]*' -v k='$(KW)' '/^-[[:space:]]/{ if ($$3==k) n++ } END{ print n+0 }' $(GLOBAL_INBOX)`; \
+	test "$$c" -gt 0 || { echo "inbox に見つかりません: $(KW)"; exit 1; }; \
+	printf '%s | %s | %s | %s\n' '$(KW)' "$$c" "`date +%F`" '$(NOTE)' >> $(PROMOTED); \
+	echo "→ 昇格済みに記録しました: $(KW) （現在 $$c 件）"
