@@ -11,8 +11,7 @@ TODAY        := $(shell date +%F)
 
 .PHONY: handoff done promote inbox-sync
 
-## handoff: 引き継ぎ観測プロンプトをクリップボードへ（作業終了時に叩く）
-handoff:
+handoff: ## 作業終了時: 引き継ぎ観測プロンプトをクリップボードへ
 	@if command -v pbcopy >/dev/null 2>&1; then \
 		cat .ai/prompts/handoff.md | pbcopy; echo "→ クリップボードにコピーしました。AIに貼り付けてください。"; \
 	elif command -v xclip >/dev/null 2>&1; then \
@@ -23,9 +22,8 @@ handoff:
 		cat .ai/prompts/handoff.md; \
 	fi
 
-## done: タスクを完了させる。handoff が済んでいないと通さない
-##   usage: make done TASK=<タスク名>  /  抜け道: make done TASK=x FORCE=1
-done:
+# usage: make done TASK=<タスク名>   抜け道: make done TASK=<名> FORCE=1
+done: ## タスク完了: TASK=<名> 指定。handoff 未実施だと通らない
 	@test -n "$(TASK)" || { echo "usage: make done TASK=<タスク名>"; exit 1; }
 	@test -f tasks/active/$(TASK).md || { echo "tasks/active/$(TASK).md がありません"; exit 1; }
 	@if [ -z "$(FORCE)" ] && ! grep -q "^- $(TODAY) | $(PROJECT) |" $(INBOX); then \
@@ -42,8 +40,7 @@ done:
 	@echo "→ tasks/done/$(TODAY)-$(TASK).md"
 	@$(MAKE) --no-print-directory promote
 
-## inbox-sync: 案件内 inbox を横断 inbox へ集約（重複行はスキップ）
-inbox-sync:
+inbox-sync: ## 案件内 inbox を横断 inbox へ集約（重複行はスキップ）
 	@mkdir -p $(dir $(GLOBAL_INBOX))
 	@touch $(GLOBAL_INBOX)
 	@grep -E '^- [0-9]{4}-[0-9]{2}-[0-9]{2} \|' $(INBOX) 2>/dev/null | \
@@ -51,6 +48,5 @@ inbox-sync:
 			grep -qxF -e "$$l" $(GLOBAL_INBOX) || echo "$$l" >> $(GLOBAL_INBOX); \
 		done; true
 
-## promote: 昇格候補を判定する（人間が数えない）
-promote:
+promote: ## 昇格候補を判定する（人間が数えない）
 	@AI_INBOX=$(GLOBAL_INBOX) bash bin/promote-check.sh

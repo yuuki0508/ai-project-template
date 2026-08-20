@@ -9,7 +9,7 @@ APP := $(DC) exec app
 .PHONY: help init up down restart logs sh rebuild perms check fmt lint stan test migrate fresh seed tinker
 
 help: ## コマンド一覧
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "};{printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "};{printf "  \033[36m%-11s\033[0m %s\n", $$1, $$2}'
 
 init: ## 初回のみ: Laravelの雛形を生成して初期設定
 	@test -f .env || cp .env.example .env

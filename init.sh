@@ -60,7 +60,7 @@ if [ -z "$TITLE" ]; then
 fi
 [ -n "$TITLE" ] || TITLE="$SLUG"
 
-if [ -z "$ONELINER" ]; then
+if [ -z "$ONELINER" ] && [ "$ASSUME_YES" != "1" ]; then
   read -r -p "システムの1行説明（誰が何をするためのものか）: " ONELINER
 fi
 [ -n "$ONELINER" ] || ONELINER="（未記入。docs/00_overview.md に書くこと）"
@@ -224,7 +224,7 @@ while IFS= read -r f; do
       -e "s/__SB_API__/$SB_API/g" \
       -e "s/__SB_STUDIO__/$SB_STUDIO/g" \
       -e "s/__SB_INBUCKET__/$SB_INBUCKET/g" \
-      "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+      "$f" > "$f.tmp" && cat "$f.tmp" > "$f" && rm -f "$f.tmp"
 done < <(find "$STAGE" -type f)
 
 # ---------- 配置 ----------

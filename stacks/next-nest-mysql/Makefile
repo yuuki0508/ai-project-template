@@ -8,7 +8,7 @@ API := $(DC) exec api
 .PHONY: help init up down restart logs sh-web sh-api rebuild check check-web check-api fmt test migrate fresh seed studio
 
 help: ## コマンド一覧
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "};{printf "  \033[36m%-11s\033[0m %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "};{printf "  \033[36m%-11s\033[0m %s\n", $$1, $$2}'
 
 init: ## 初回のみ: web / api の雛形を生成
 	@test -f .env || cp .env.example .env

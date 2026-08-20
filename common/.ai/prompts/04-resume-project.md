@@ -8,6 +8,7 @@
 3. tasks/done/ の直近3件の作業ログを読む
 4. docs/decisions/ の一覧を確認する
 5. git log --oneline -20 を確認する
+6. docs/decisions/_inbox.md の未昇格ログに目を通す
 
 そのうえで、
 - 今どこまで進んでいるか

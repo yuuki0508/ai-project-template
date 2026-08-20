@@ -9,7 +9,7 @@ SB  := npx -y supabase@latest
 .PHONY: help init up down restart logs sh-web sh-api rebuild check check-web check-api fmt test migrate new-migration fresh pull status studio
 
 help: ## コマンド一覧
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "};{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "};{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 init: ## 初回のみ: Supabase初期化 + web / api の雛形を生成
 	@test -f .env || cp .env.example .env
